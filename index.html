@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Bucket List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Dancing+Script&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Dancing Script', cursive;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        header {
+            margin-bottom: 20px;
+        }
+        .photos {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .photos img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid #ffb6c1;
+            object-fit: cover;
+        }
+        h1 {
+            font-family: 'Pacifico', cursive;
+            font-size: 3em;
+            color: #ff69b4;
+            cursor: pointer;
+            display: inline-block;
+        }
+        h1:hover {
+            color: #ff1493;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        li {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.5);
+        }
+        label {
+            flex: 1;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        .details {
+            display: none;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .details input, .details textarea {
+            width: 100%;
+            margin-bottom: 5px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Dancing Script', cursive;
+        }
+        button {
+            background-color: #ffb6c1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #ff69b4;
+        }
+        .add-item {
+            margin-top: 20px;
+        }
+        .add-item input {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Dancing Script', cursive;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="photos">
+            <img src="photo.jpg" alt="Your Photo">
+            <img src="photo1.jpg" alt="GF Photo">
+        </div>
+        <h1 id="title" contenteditable="true">Our Bucket List</h1>
+    </header>
+    
+    <ul id="bucket-list">
+        <!-- Items will be loaded dynamically -->
+    </ul>
+    
+    <div class="add-item">
+        <input type="text" id="new-item" placeholder="Add a new bucket list item...">
+        <button onclick="addItem()">Add Item</button>
+    </div>
+
+    <script>
+        const bucketList = document.getElementById('bucket-list');
+        const title = document.getElementById('title');
+
+        // Default premade items
+        const defaultItems = [
+            { id: 'item1', text: 'Intramuros', checked: false, comment: '', date: '' },
+            { id: 'item2', text: 'Baguio', checked: false, comment: '', date: '' },
+            { id: 'item3', text: 'Tagaytay', checked: false, comment: '', date: '' },
+            { id: 'item4', text: 'National Museum', checked: false, comment: '', date: '' },
+            { id: 'item5', text: 'BGC', checked: false, comment: '', date: '' }
+        ];
+
+        // Load data from localStorage
+        function loadData() {
+            const savedItems = JSON.parse(localStorage.getItem('bucketListItems')) || defaultItems;
+            const savedTitle = localStorage.getItem('bucketListTitle') || 'Our Bucket List';
+            title.textContent = savedTitle;
+            bucketList.innerHTML = ''; // Clear existing
+            savedItems.forEach(item => renderItem(item));
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            const items = Array.from(bucketList.children).map(li => {
+                const checkbox = li.querySelector('input[type="checkbox"]');
+                const textarea = li.querySelector('textarea');
+                const dateInput = li.querySelector('input[type="date"]');
+                return {
+                    id: checkbox.id,
+                    text: li.querySelector('label').textContent,
+                    checked: checkbox.checked,
+                    comment: textarea ? textarea.value : '',
+                    date: dateInput ? dateInput.value : ''
+                };
+            });
+            localStorage.setItem('bucketListItems', JSON.stringify(items));
+            localStorage.setItem('bucketListTitle', title.textContent);
+        }
+
+        // Render an item
+        function renderItem(item) {
+            const li = document.createElement('li');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = item.id;
+            checkbox.checked = item.checked;
+            checkbox.onchange = function() {
+                toggleDetails(this);
+                saveData();
+            };
+
+            const label = document.createElement('label');
+            label.htmlFor = item.id;
+            label.textContent = item.text;
+
+            const details = document.createElement('div');
+            details.className = 'details';
+            if (item.checked) details.style.display = 'block';
+
+            const textarea = document.createElement('textarea');
+            textarea.placeholder = 'Add a comment...';
+            textarea.value = item.comment;
+            textarea.oninput = saveData; // Save on every input
+
+            const dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.value = item.date;
+            dateInput.oninput = saveData; // Save on every input
+
+            details.appendChild(textarea);
+            details.appendChild(dateInput);
+
+            li.appendChild(checkbox);
+            li.appendChild(label);
+            li.appendChild(details);
+            bucketList.appendChild(li);
+        }
+
+        // Toggle details visibility
+        function toggleDetails(checkbox) {
+            const details = checkbox.parentElement.querySelector('.details');
+            details.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        // Add new item
+        function addItem() {
+            const newItemText = document.getElementById('new-item').value.trim();
+            if (newItemText === '') return;
+
+            const newItem = {
+                id: 'item' + Date.now(),
+                text: newItemText,
+                checked: false,
+                comment: '',
+                date: ''
+            };
+            renderItem(newItem);
+            saveData();
+            document.getElementById('new-item').value = '';
+        }
+
+        // Save title on edit
+        title.addEventListener('input', saveData);
+
+        // Save on page unload (before closing)
+        window.addEventListener('beforeunload', saveData);
+
+        // Load data on page load
+        loadData();
+    </script>
+</body>
+</html>
